@@ -50,39 +50,42 @@ def begin_snaffle(options):
             continue
         
         for share in smb_client.shares:
-            if share.name in options.exclude_shares:
-                log.info(f"Skipping excluded share: {share.name}")
+            if share in options.exclude_shares:  # FIXED: Checking share as a string
+                log.info(f"Skipping excluded share: {share}")
                 continue
-
+        
             files = []
             try:
                 if not options.go_loud:
                     if is_interest_share(share, snaff_rules) == False:
                         log.debug(f"{share} matched a Discard rule, skipping files inside of this share...")
                         continue
-                    
+                        
                 files = smb_client.ls(share, "")
-
+        
                 for file in files:
                     size = file.get_filesize()
                     name = file.get_longname()
+                    
+                    # Ensure we only attempt to get files, not directories
+                    if file.is_directory():
+                        log.warning(f"Skipping directory: \\\\{target}\\{share}\\{name}")
+                        continue  # Skip directories
+        
                     file = RemoteFile(name, share, target, size, smb_client)
-
+        
                     if options.go_loud:
                         try:
                             if not options.no_download:
                                 file.get(smb_client)
                             log.info(f"[File] \\\\{target}\\{share}\\{name}")
-
+        
                         except FileRetrievalError as e:
-                            file.handle_download_error(file.name, e, options.go_loud, no_add_error=False)
-                            
-                    else:
-                        if size < options.max_file_snaffle:
+                            add_err = True
                             try:
-                                is_interest_file(file, smb_client, share, options.no_download)
-                            except FileRetrievalError as e:
-                                file.handle_download_error(file.name, e, options.go_loud, no_add_error=False)
-                                
+                                file.handle_download_error(file.name, e, options.go_loud, add_err)
+                            except Exception as err:
+                                log.error(f"Error handling download error: {err}")
+        
             except FileListError as e:
                 log.error(f"Cannot list files at {share} {e}")
