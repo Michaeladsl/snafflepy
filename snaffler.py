@@ -31,15 +31,13 @@ def parse_arguments():
                         action='store_true', help="Show more info")
     parser.add_argument("--go-loud", action='store_true',
                         help="Don't try to find anything interesting, literally just go through every computer and every share and print out as many files as possible. Use at your own risk")
-    
-    parser.add_argument("-m", "--max-file-snaffle", metavar="size", type=int, default=10000, help="Max filesize to snaffle in bytes (any files over this size will be dropped)")
-    # TODO
-    # parser.add_argument("-i", "--no-share-discovery", action='store_true',
-    #                    help="Disables share discovery (more stealthy)")
+    parser.add_argument("-m", "--max-file-snaffle", metavar="size", type=int, default=10000,
+                        help="Max filesize to snaffle in bytes (any files over this size will be dropped)")
     parser.add_argument("-n", "--disable-computer-discovery", action='store_true',
                         help="Disable computer discovery, requires a list of hosts to do discovery on")
-    
-    parser.add_argument("--no-download", action='store_true', help="Don't download files, just print found file names to stdout - this can only show the top level of files from the share and is unable to recurse into subdirectories.")
+    parser.add_argument("--no-download", action='store_true',
+                        help="Don't download files, just print found file names to stdout - this can only show the top level of files from the share and is unable to recurse into subdirectories.")
+    parser.add_argument("--exclude-shares", nargs='*', default=[], help="List of share names to exclude from scanning")
 
     try:
         if len(sys.argv) <= 1:
@@ -67,6 +65,7 @@ def parse_arguments():
             if len(options.targets) > 1 and not options.disable_computer_discovery:
                 log.error("If you have more than one target, then the -n option must be specified.")
                 sys.exit(2)
+
             return options
 
 
@@ -81,7 +80,6 @@ O~~    O~~ O~~  O~~O~~   O~~   O~~    O~~   O~~O~        O~~           O~~
   O~~ ~~  O~~~  O~~  O~~ O~~~  O~~    O~~  O~~~  O~~~~   O~~          O~~   
                                                                     O~~     ''')
 
-    print("")
     print("")
 
 
