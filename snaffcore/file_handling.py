@@ -10,30 +10,28 @@ import termcolor
 
 
 class RemoteFile():
-    '''
-    Represents a file on an SMB share
-    Passed from a spiderling up to its parent spider    
-    '''
-
-    def __init__(self, name, share, target, size=0, smb_client=None):
-
+    def __init__(self, name, share, target, size=0, smb_client=None, output_folder="remotefiles"):
         self.share = share
         self.target = target
         self.name = name
         self.size = size
         self.smb_client = smb_client
 
-        does_exist = os.path.exists("remotefiles")
-        if not does_exist:
-            log.info("remotefiles directory not present, creating dir")
-            os.makedirs("remotefiles")
+        # Ensure output folder exists
+        os.makedirs(output_folder, exist_ok=True)
 
-        # file_suffix = Path(name).suffix.lower()
-        self.tmp_filename = Path('./remotefiles') / \
-            (self.name)
+        self.tmp_filename = os.path.join(output_folder, self.name)
 
-        # self.tmp_filename = Path('/tmp/.snafflepy') / \
-        #     (random_string(15) + file_suffix)
+    def get(self, smb_client=None):
+        if smb_client is None and self.smb_client is None:
+            raise FileRetrievalError('Please specify smb_client')
+
+        with open(self.tmp_filename, 'wb') as f:
+            try:
+                smb_client.conn.getFile(self.share, self.name, f.write)
+            except Exception as e:
+                handle_impacket_error(e, smb_client, self.share, self.name)
+                raise FileRetrievalError(f'Error retrieving file "{self}": {str(e)[:150]}')
 
     def get(self, smb_client=None):
         '''
