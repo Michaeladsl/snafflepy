@@ -38,6 +38,8 @@ def parse_arguments():
     parser.add_argument("--no-download", action='store_true',
                         help="Don't download files, just print found file names to stdout - this can only show the top level of files from the share and is unable to recurse into subdirectories.")
     parser.add_argument("--exclude-shares", nargs='*', default=[], help="List of share names to exclude from scanning")
+    parser.add_argument("--creds-file", type=str, help="File containing username:'password' pairs, one per line.")
+
 
     try:
         if len(sys.argv) <= 1:
