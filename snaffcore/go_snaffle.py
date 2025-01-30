@@ -16,6 +16,25 @@ def begin_snaffle(options):
 
     print("Beginning the snaffle...")
 
+    # Debugging: Print the raw input for exclude_shares
+    log.info(f"Raw exclude_shares input: {options.exclude_shares}")
+    
+    # Normalize and correctly split exclude_shares into individual share names
+    # Normalize and correctly split exclude_shares into individual share names
+    if isinstance(options.exclude_shares, str):
+        # Replace commas with spaces, split into individual items, and strip all non-essential characters
+        options.exclude_shares = set(map(lambda x: x.strip().lower(), options.exclude_shares.replace(",", " ").split()))
+    elif isinstance(options.exclude_shares, list):
+        options.exclude_shares = set(map(lambda x: x.strip().lower(), options.exclude_shares))
+    else:
+        options.exclude_shares = set()
+    
+    # Debugging: Print the final exclusion set
+    log.info(f"Final exclusion list: {options.exclude_shares}")
+
+
+
+
     # Load credentials from file or use -u and -p if provided
     credential_list = []
     if options.creds_file:
@@ -74,9 +93,18 @@ def begin_snaffle(options):
                 continue
 
             for share in smb_client.shares:
-                if share in options.exclude_shares:
-                    log.info(f"Skipping excluded share: {share}")
+                share_clean = share.strip().lower()  # Normalize share name
+                
+                # Debugging: Print the share being checked and the exclusion list
+                log.info(f"Checking share: '{share_clean}' against exclusions: {options.exclude_shares}")
+                
+                if share_clean in options.exclude_shares:
+                    log.info(f"Skipping excluded share: {share} (Matched in exclusion list: {options.exclude_shares})")
                     continue
+                
+                log.debug(f"Processing share: {share}")
+
+
 
                 try:
                     files = smb_client.ls(share, "")
